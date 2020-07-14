@@ -24,18 +24,6 @@ steps:
         Write-Host "PR-Version: dev-$(System.PullRequest.PullRequestNumber)"
       }
 
-
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'
-    feedsToUse: 'select'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'test'
-
 - task: Docker@2
   inputs:
     containerRegistry: 'official-docker-modmoto'
