@@ -1,15 +1,15 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 
 WORKDIR /app
-COPY ./w3c-update-service.sln.sln ./
+COPY ./w3c-update-service.sln ./
 
-COPY ./w3c-update-service/w3c-update-service.csproj.csproj ./w3c-update-service/w3c-update-service.csproj.csproj
-RUN dotnet restore ./w3c-update-service/w3c-update-service.csproj.csproj
+COPY ./w3c-update-service/w3c-update-service.csproj ./w3c-update-service/w3c-update-service.csproj
+RUN dotnet restore ./w3c-update-service/w3c-update-service.csproj
 
 COPY ./w3c-update-service ./w3c-update-service
-RUN dotnet build ./w3c-update-service/w3c-update-service.csproj.csproj -c Release
+RUN dotnet build ./w3c-update-service/w3c-update-service.csproj -c Release
 
-RUN dotnet publish "./w3c-update-service/w3c-update-service.csproj.csproj" -c Release -o "../../app/out"
+RUN dotnet publish "./w3c-update-service/w3c-update-service.csproj" -c Release -o "../../app/out"
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
