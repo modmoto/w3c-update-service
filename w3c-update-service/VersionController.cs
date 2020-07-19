@@ -18,22 +18,27 @@ namespace w3c_update_service
         [HttpGet("maps")]
         public IActionResult GetMaps()
         {
-            return LoadFile("maps");
+            return LoadFile("UpdateFiles/", "maps");
         }
 
         [HttpGet("webui")]
         public IActionResult GetWebUi()
         {
-            return LoadFile("webui");
+            return LoadFile("UpdateFiles/", "webui");
         }
 
-        private static IActionResult LoadFile(string fileNameStart)
+        [HttpGet("installers/{type}")]
+        public IActionResult GetInstaller(string type)
         {
-            var strings = Directory.GetFiles("UpdateFiles");
-            var filePath = strings.Single(f => f.StartsWith("UpdateFiles/" + fileNameStart));
+            return LoadFile("Installers/", type);
+        }
+
+        private static IActionResult LoadFile(string basePath, string fileNameStart)
+        {
+            var strings = Directory.GetFiles(basePath);
+            var filePath = strings.Single(f => f.StartsWith(basePath + fileNameStart));
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
             return new FileContentResult(dataBytes, "application/zip");
         }
-
     }
 }
