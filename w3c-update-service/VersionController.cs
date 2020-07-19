@@ -28,9 +28,14 @@ namespace w3c_update_service
         }
 
         [HttpGet("installers/{type}")]
-        public IActionResult GetInstaller(string type)
+        public IActionResult GetInstaller(SupportedOs type)
         {
-            return ReturnResultFor(type == "mac" ? "dmg" : "exe");
+            switch (type)
+            {
+                case SupportedOs.mac : return ReturnResultFor("dmg");
+                case SupportedOs.win : return ReturnResultFor("exe");
+                default: return BadRequest("Unsupported OS Version");
+;            }
         }
 
         private static IActionResult ReturnResultFor(string fileEnding)
@@ -52,5 +57,10 @@ namespace w3c_update_service
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
             return new FileContentResult(dataBytes, "application/zip");
         }
+    }
+
+    public enum SupportedOs
+    {
+        mac, win
     }
 }
