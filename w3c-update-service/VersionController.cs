@@ -30,7 +30,19 @@ namespace w3c_update_service
         [HttpGet("installers/{type}")]
         public IActionResult GetInstaller(string type)
         {
-            return LoadFile("Installers/", type);
+            return ReturnResultFor(type == "mac" ? "dmg" : "exe");
+        }
+
+        private static IActionResult ReturnResultFor(string fileEnding)
+        {
+            var strings = Directory.GetFiles("Installers");
+            var ordered = strings.OrderByDescending(s => s);
+            var filePath = ordered.First(f => f.EndsWith("." + fileEnding));
+            var dataBytes = System.IO.File.ReadAllBytes(filePath);
+            return new FileContentResult(dataBytes, $"application/{fileEnding}")
+            {
+                FileDownloadName = filePath.Split("/").Last()
+            };
         }
 
         private static IActionResult LoadFile(string basePath, string fileNameStart)
