@@ -8,7 +8,7 @@ namespace w3c_update_service
     [Route("api")]
     public class VersionController : ControllerBase
     {
-        [HttpGet("version")]
+        [HttpGet("client-version")]
         public IActionResult GetVersion()
         {
             var version = Directory.GetFiles("UpdateFiles").OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", "");
@@ -27,7 +27,7 @@ namespace w3c_update_service
             return LoadFile("UpdateFiles/", "webui");
         }
 
-        [HttpGet("installer/{type}")]
+        [HttpGet("launcher/{type}")]
         public IActionResult GetInstaller(SupportedOs type)
         {
             switch (type)
@@ -38,10 +38,10 @@ namespace w3c_update_service
 ;            }
         }
 
-        [HttpGet("installer-version")]
+        [HttpGet("launcher-version")]
         public IActionResult GetInstallerVersion()
         {
-            var version = Directory.GetFiles("Installers")
+            var version = Directory.GetFiles("Launchers")
                 .Where(f => f.EndsWith(".dmg"))
                 .OrderByDescending(f => f)
                 .First()
