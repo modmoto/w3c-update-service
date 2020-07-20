@@ -11,7 +11,7 @@ namespace w3c_update_service
         [HttpGet("client-version")]
         public IActionResult GetVersion()
         {
-            var version = Directory.GetFiles("UpdateFiles").OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", "");
+            var version = int.Parse(Directory.GetFiles("UpdateFiles").OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", ""));
             return Ok(new { version });
         }
 
@@ -41,12 +41,12 @@ namespace w3c_update_service
         [HttpGet("launcher-version")]
         public IActionResult GetInstallerVersion()
         {
-            var version = Directory.GetFiles("Launchers")
+            var version = int.Parse(Directory.GetFiles("Launchers")
                 .Where(f => f.EndsWith(".dmg"))
                 .OrderByDescending(f => f)
                 .First()
                 .Split("-")[2]
-                .Replace(".dmg", "");
+                .Replace(".dmg", ""));
             return Ok(new { version });
         }
 
