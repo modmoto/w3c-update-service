@@ -8,23 +8,26 @@ namespace w3c_update_service
     [Route("api")]
     public class VersionController : ControllerBase
     {
+        private static string _launcherFolder = "Launchers";
+        private string _updateFileFolder = "UpdateFiles/";
+
         [HttpGet("client-version")]
         public IActionResult GetVersion()
         {
-            var version = Directory.GetFiles("UpdateFiles").OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", "");
+            var version = Directory.GetFiles(_updateFileFolder).OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", "");
             return Ok(new { version });
         }
 
         [HttpGet("maps")]
         public IActionResult GetMaps()
         {
-            return LoadFile("UpdateFiles/", "maps");
+            return LoadFile(_updateFileFolder, "maps");
         }
 
         [HttpGet("webui")]
         public IActionResult GetWebUi()
         {
-            return LoadFile("UpdateFiles/", "webui");
+            return LoadFile(_updateFileFolder, "webui");
         }
 
         [HttpGet("launcher/{type}")]
@@ -41,7 +44,7 @@ namespace w3c_update_service
         [HttpGet("launcher-version")]
         public IActionResult GetInstallerVersion()
         {
-            var version = Directory.GetFiles("Launchers")
+            var version = Directory.GetFiles(_launcherFolder)
                 .Where(f => f.EndsWith(".dmg"))
                 .OrderByDescending(f => f)
                 .First()
@@ -52,7 +55,7 @@ namespace w3c_update_service
 
         private static IActionResult ReturnResultFor(string fileEnding)
         {
-            var strings = Directory.GetFiles("Launchers");
+            var strings = Directory.GetFiles(_launcherFolder);
             var ordered = strings.OrderByDescending(s => s);
             var filePath = ordered.First(f => f.EndsWith("." + fileEnding));
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
