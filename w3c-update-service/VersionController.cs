@@ -52,7 +52,7 @@ namespace w3c_update_service
 
         private static IActionResult ReturnResultFor(string fileEnding)
         {
-            var strings = Directory.GetFiles("Installers");
+            var strings = Directory.GetFiles("Launchers");
             var ordered = strings.OrderByDescending(s => s);
             var filePath = ordered.First(f => f.EndsWith("." + fileEnding));
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
