@@ -11,7 +11,7 @@ namespace w3c_update_service
         [HttpGet("version")]
         public IActionResult GetVersion()
         {
-            var version = int.Parse(Directory.GetFiles("UpdateFiles").First().Split("_v")[1].Replace(".zip", ""));
+            var version = int.Parse(Directory.GetFiles("UpdateFiles").OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", ""));
             return Ok(new { version });
         }
 
@@ -27,7 +27,7 @@ namespace w3c_update_service
             return LoadFile("UpdateFiles/", "webui");
         }
 
-        [HttpGet("installers/{type}")]
+        [HttpGet("installer/{type}")]
         public IActionResult GetInstaller(SupportedOs type)
         {
             switch (type)
@@ -36,6 +36,13 @@ namespace w3c_update_service
                 case SupportedOs.win : return ReturnResultFor("exe");
                 default: return BadRequest("Unsupported OS Version");
 ;            }
+        }
+
+        [HttpGet("installer-version")]
+        public IActionResult GetInstallerVersion()
+        {
+            var version = int.Parse(Directory.GetFiles("Installers").OrderByDescending(f => f).First().Split("-")[1].Replace(".dmg", ""));
+            return Ok(new { version });
         }
 
         private static IActionResult ReturnResultFor(string fileEnding)
