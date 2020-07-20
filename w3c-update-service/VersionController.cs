@@ -41,7 +41,7 @@ namespace w3c_update_service
         [HttpGet("installer-version")]
         public IActionResult GetInstallerVersion()
         {
-            var version = int.Parse(Directory.GetFiles("Installers").OrderByDescending(f => f).First().Split("-")[1].Replace(".dmg", ""));
+            var version = int.Parse(Directory.GetFiles("Installers").OrderByDescending(f => f).First().Split("-")[2].Replace(".dmg", ""));
             return Ok(new { version });
         }
 
