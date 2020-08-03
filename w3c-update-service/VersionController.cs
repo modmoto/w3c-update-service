@@ -14,7 +14,12 @@ namespace w3c_update_service
         [HttpGet("client-version")]
         public IActionResult GetVersion()
         {
-            var version = Directory.GetFiles(_updateFileFolder).OrderByDescending(f => f).First().Split("_v")[1].Replace(".zip", "");
+            var version = Directory.GetFiles(_updateFileFolder)
+                .Where(f => f.StartsWith(_updateFileFolder + "maps"))
+                .OrderByDescending(f => f)
+                .First()
+                .Split("_v")[1]
+                .Replace(".zip", "");
             return Ok(new { version });
         }
 
@@ -25,10 +30,11 @@ namespace w3c_update_service
         }
 
         [HttpGet("webui")]
-        public IActionResult GetWebUi()
+        public IActionResult GetWebUi(bool ptr)
         {
-            return LoadFile(_updateFileFolder, "webui");
+            return LoadFile(_updateFileFolder, ptr ? "ptr-webui" : "webui");
         }
+
 
         [HttpGet("launcher/{type}")]
         public IActionResult GetInstaller(SupportedOs type)
@@ -67,8 +73,10 @@ namespace w3c_update_service
 
         private static IActionResult LoadFile(string basePath, string fileNameStart)
         {
-            var strings = Directory.GetFiles(basePath);
-            var filePath = strings.Single(f => f.StartsWith(basePath + fileNameStart));
+            var filePath = Directory.GetFiles(basePath)
+                .Where(f => f.StartsWith(basePath + fileNameStart))
+                .OrderByDescending(f => f)
+                .First();
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
             return new FileContentResult(dataBytes, "application/zip");
         }
