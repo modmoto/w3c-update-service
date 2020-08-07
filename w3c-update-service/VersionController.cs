@@ -37,12 +37,12 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public IActionResult GetInstaller(SupportedOs type)
+        public IActionResult GetInstaller(SupportedOs type, string concreteVersion)
         {
             switch (type)
             {
-                case SupportedOs.mac : return ReturnResultFor("dmg");
-                case SupportedOs.win : return ReturnResultFor("exe");
+                case SupportedOs.mac : return ReturnResultFor($"{concreteVersion}.dmg");
+                case SupportedOs.win : return ReturnResultFor($"{concreteVersion}.exe");
                 default: return BadRequest("Unsupported OS Version");
 ;            }
         }
@@ -63,7 +63,7 @@ namespace w3c_update_service
         {
             var strings = Directory.GetFiles(_launcherFolder);
             var ordered = strings.OrderByDescending(s => s);
-            var filePath = ordered.First(f => f.EndsWith("." + fileEnding));
+            var filePath = ordered.First(f => f.EndsWith(fileEnding));
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
             return new FileContentResult(dataBytes, $"application/{fileEnding}")
             {
