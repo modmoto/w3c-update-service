@@ -37,7 +37,7 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public IActionResult GetInstaller(SupportedOs type, string concreteVersion)
+        public IActionResult GetInstaller(SupportedOs type, [FromQuery] string concreteVersion)
         {
             switch (type)
             {
