@@ -54,7 +54,7 @@ namespace w3c_update_service
                 .Where(f => f.EndsWith(".dmg"))
                 .OrderByDescending(f => f)
                 .First()
-                .Split("-")[2]
+                .Split("-")[1]
                 .Replace(".dmg", "");
             return Ok(new { version });
         }
