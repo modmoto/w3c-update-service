@@ -37,12 +37,12 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public IActionResult GetInstaller(SupportedOs type, [FromQuery] string concreteVersion)
+        public IActionResult GetInstaller(SupportedOs type, [FromQuery] string version)
         {
             switch (type)
             {
-                case SupportedOs.mac : return ReturnResultFor($"{concreteVersion}.dmg");
-                case SupportedOs.win : return ReturnResultFor($"{concreteVersion}.exe");
+                case SupportedOs.mac : return ReturnResultFor($"{version}.dmg");
+                case SupportedOs.win : return ReturnResultFor($"{version}.exe");
                 default: return BadRequest("Unsupported OS Version");
 ;            }
         }
