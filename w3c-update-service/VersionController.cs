@@ -78,7 +78,9 @@ namespace w3c_update_service
                 .OrderByDescending(f => f)
                 .First();
             var dataBytes = System.IO.File.ReadAllBytes(filePath);
-            return new FileContentResult(dataBytes, "application/zip");
+            var fileContentResult = new FileContentResult(dataBytes, "application/zip");
+            fileContentResult.FileDownloadName = $"{fileNameStart}.zip";
+            return fileContentResult;
         }
     }
 
