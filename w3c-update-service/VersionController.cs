@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,12 +38,12 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public IActionResult GetInstaller(SupportedOs type, [FromQuery] string version)
+        public IActionResult GetInstaller(SupportedOs type)
         {
             switch (type)
             {
-                case SupportedOs.mac : return ReturnResultFor($"{version}.dmg");
-                case SupportedOs.win : return ReturnResultFor($"{version}.exe");
+                case SupportedOs.mac : return ReturnResultFor("dmg");
+                case SupportedOs.win : return ReturnResultFor("exe");
                 default: return BadRequest("Unsupported OS Version");
 ;            }
         }
@@ -62,12 +63,13 @@ namespace w3c_update_service
         private static IActionResult ReturnResultFor(string fileEnding)
         {
             var strings = Directory.GetFiles(_launcherFolder);
-            var ordered = strings.OrderByDescending(s => s);
-            var filePath = ordered.First(f => f.EndsWith(fileEnding));
-            var dataBytes = System.IO.File.ReadAllBytes(filePath);
+            var versions = strings.Select(s => new UpdateTo(s));
+            var ordered = versions.OrderByDescending(s => s);
+            var filePath = ordered.First();
+            var dataBytes = System.IO.File.ReadAllBytes(filePath.Path);
             return new FileContentResult(dataBytes, $"application/{fileEnding}")
             {
-                FileDownloadName = filePath.Split("/").Last()
+                FileDownloadName = filePath.Path.Split("/").Last()
             };
         }
 
@@ -81,6 +83,38 @@ namespace w3c_update_service
             var fileContentResult = new FileContentResult(dataBytes, "application/zip");
             fileContentResult.FileDownloadName = $"{fileNameStart}.zip";
             return fileContentResult;
+        }
+    }
+
+    class UpdateTo : IComparable<UpdateTo>
+    {
+        public int Patch { get; }
+        public int Minor { get; }
+        public int Major { get; }
+        public string Path { get; }
+
+        public UpdateTo(string path)
+        {
+            Path = path;
+
+            var split = path
+                .Split("/").Last()
+                .Replace(".exe", "")
+                .Replace(".dmg", "")
+                .Replace("w3champions Setup ", "")
+                .Replace("w3champions-", "")
+                .Split(".");
+
+            Patch = int.Parse(split[0]);
+            Minor = int.Parse(split[1]);
+            Major = int.Parse(split[2]);
+        }
+
+        public int CompareTo(UpdateTo other)
+        {
+            var version = Major * 10000 + Minor * 1000 + Patch * 100 - (other.Major * 10000 + other.Minor * 1000 +
+                                                                        other.Patch * 100);
+            return version;
         }
     }
 
