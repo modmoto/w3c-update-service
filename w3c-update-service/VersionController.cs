@@ -62,7 +62,7 @@ namespace w3c_update_service
 
         private static IActionResult ReturnResultFor(string fileEnding)
         {
-            var strings = Directory.GetFiles(_launcherFolder);
+            var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding));
             var versions = strings.Select(s => new UpdateTo(s));
             var ordered = versions.OrderByDescending(s => s);
             var filePath = ordered.First();
@@ -101,6 +101,7 @@ namespace w3c_update_service
                 .Split("/").Last()
                 .Replace(".exe", "")
                 .Replace(".dmg", "")
+                .Replace(".AppImage", "")
                 .Replace("w3champions Setup ", "")
                 .Replace("w3champions-", "")
                 .Split(".");
