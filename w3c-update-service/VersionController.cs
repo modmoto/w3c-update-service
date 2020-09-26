@@ -62,7 +62,7 @@ namespace w3c_update_service
 
         private static IActionResult ReturnResultFor(string fileEnding)
         {
-            var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding));
+            var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding)).ToList();
             var versions = strings.Select(s => new UpdateTo(s));
             var ordered = versions.OrderBy(s => s);
             var filePath = ordered.First();
