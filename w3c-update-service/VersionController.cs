@@ -64,7 +64,7 @@ namespace w3c_update_service
         {
             var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding));
             var versions = strings.Select(s => new UpdateTo(s));
-            var ordered = versions.OrderByDescending(s => s);
+            var ordered = versions.OrderBy(s => s);
             var filePath = ordered.First();
             var dataBytes = System.IO.File.ReadAllBytes(filePath.Path);
             return new FileContentResult(dataBytes, $"application/{fileEnding}")
