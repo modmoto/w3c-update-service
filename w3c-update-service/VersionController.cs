@@ -64,7 +64,7 @@ namespace w3c_update_service
         {
             var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding)).ToList();
             var versions = strings.Select(s => new UpdateTo(s));
-            var ordered = versions.OrderBy(s => s);
+            var ordered = versions.OrderByDescending(s => s);
             var filePath = ordered.First();
             var dataBytes = System.IO.File.ReadAllBytes(filePath.Path);
             return new FileContentResult(dataBytes, $"application/{fileEnding}")
@@ -106,16 +106,16 @@ namespace w3c_update_service
                 .Replace("w3champions-", "")
                 .Split(".");
 
-            Patch = int.Parse(split[0]);
+            Patch = int.Parse(split[2]);
             Minor = int.Parse(split[1]);
-            Major = int.Parse(split[2]);
+            Major = int.Parse(split[0]);
         }
 
         public int CompareTo(UpdateTo other)
         {
-            var version = Major * 10000 + Minor * 1000 + Patch * 100 - (other.Major * 10000 + other.Minor * 1000 +
-                                                                        other.Patch * 100);
-            return version;
+            if (Major != other.Major) return Major - other.Major;
+            if (Minor != other.Minor) return Minor - other.Minor;
+            return Patch - other.Patch;
         }
     }
 
