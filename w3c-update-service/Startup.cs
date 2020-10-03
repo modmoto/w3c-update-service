@@ -6,8 +6,10 @@ namespace w3c_update_service
 {
     public class Startup
     {
+
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpClient();
             services.AddControllers();
         }
 
