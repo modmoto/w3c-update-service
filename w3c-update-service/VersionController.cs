@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using w3c_update_service.Models;
 using w3c_update_service.Models.GithubModels;
 
 namespace w3c_update_service
@@ -121,7 +117,7 @@ namespace w3c_update_service
         {
             var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.StartsWith(startsWithFileName));
 
-            return releaseAsset?.BrowserDownloadUrl;
+            return $"https://cors-anywhere.herokuapp.com/{releaseAsset?.BrowserDownloadUrl}";
         }
 
         private async Task<GithubReleaseResponse> GetLatestLauncherReleaseFromGithub()
