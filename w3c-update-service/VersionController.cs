@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using w3c_update_service.Models;
+using w3c_update_service.Models.GithubModels;
 
 namespace w3c_update_service
 {
@@ -11,8 +15,14 @@ namespace w3c_update_service
     [Route("api")]
     public class VersionController : ControllerBase
     {
-        private static string _launcherFolder = "Launchers";
         private string _updateFileFolder = "UpdateFiles/";
+
+        private readonly IHttpClientFactory _clientFactory;
+
+        public VersionController(IHttpClientFactory clientFactory)
+        {
+            _clientFactory = clientFactory;
+        }
 
         [HttpGet("client-version")]
         public IActionResult GetVersion()
@@ -37,39 +47,54 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public IActionResult GetInstaller(SupportedOs type)
+        public async Task<IActionResult> GetInstaller(SupportedOs type)
         {
+            var latestRelease = await GetLatestLauncherReleaseFromGithub();
+
+            if (latestRelease == null)
+            {
+                return BadRequest("There was a problem getting data from github");
+            }
+
+            string fileExtension;
             switch (type)
             {
-                case SupportedOs.mac : return ReturnResultFor("dmg");
-                case SupportedOs.win : return ReturnResultFor("exe");
-                default: return BadRequest("Unsupported OS Version");
-;            }
+                case SupportedOs.mac: {
+                        fileExtension = "dmg";
+                        break;
+                    }
+                case SupportedOs.win:
+                    {
+                        fileExtension = "exe";
+                        break;
+                    }
+                default:
+                   return BadRequest("Unsupported OS Version");
+            }
+
+            var url = GetLinkToReleaseAsset(latestRelease, fileExtension);
+
+            return Redirect(url);
         }
 
         [HttpGet("launcher-version")]
-        public IActionResult GetInstallerVersion()
+        public async Task<IActionResult> GetInstallerVersion()
         {
-            var version = Directory.GetFiles(_launcherFolder)
-                .Where(f => f.EndsWith(".dmg"))
-                .OrderByDescending(f => f)
-                .First()
-                .Split("-")[1]
-                .Replace(".dmg", "");
-            return Ok(new { version });
+            var latestRelease = await GetLatestLauncherReleaseFromGithub();
+
+            if (latestRelease == null)
+            {
+                return BadRequest("There was a problem getting data from github");
+            }
+
+            return Ok(new { version = latestRelease.Name });
         }
 
-        private static IActionResult ReturnResultFor(string fileEnding)
+        private static string GetLinkToReleaseAsset(GithubReleaseResponse response, string fileExtension)
         {
-            var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding)).ToList();
-            var versions = strings.Select(s => new UpdateTo(s));
-            var ordered = versions.OrderByDescending(s => s);
-            var filePath = ordered.First();
-            var dataBytes = System.IO.File.ReadAllBytes(filePath.Path);
-            return new FileContentResult(dataBytes, $"application/{fileEnding}")
-            {
-                FileDownloadName = filePath.Path.Split("/").Last()
-            };
+            var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.EndsWith(fileExtension));
+
+            return releaseAsset?.BrownserDownloadUrl;
         }
 
         private static IActionResult LoadFile(string basePath, string fileNameStart)
@@ -110,6 +135,26 @@ namespace w3c_update_service
             }
 
             return mapsData.OrderByDescending(x => x.Version).First();
+        }
+
+        private async Task<GithubReleaseResponse> GetLatestLauncherReleaseFromGithub()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get,
+            "https://api.github.com/repos/w3champions/w3champions-launcher/releases/latest");
+            request.Headers.Add("Accept", "application/vnd.github.v3+json");
+            request.Headers.Add("User-Agent", "Asp.WebApi");
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var reponseString = await response.Content.ReadAsStringAsync();
+                var releaseResposne = JsonConvert.DeserializeObject<GithubReleaseResponse>(reponseString);
+                return releaseResposne;
+            }
+
+            return null;
         }
     }
 
