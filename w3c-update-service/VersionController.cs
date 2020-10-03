@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using w3c_update_service.Cache;
 using w3c_update_service.Models.GithubModels;
 
 namespace w3c_update_service
@@ -11,17 +13,33 @@ namespace w3c_update_service
     [Route("api")]
     public class VersionController : ControllerBase
     {
+        private const int GithubReleaseCacheMunutes = 1;
+
         private readonly IHttpClientFactory _clientFactory;
+
+        private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseReponse;
+        private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseReponse;
+
 
         public VersionController(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
+
+            if (LauncherReleaseReponse == null)
+            {
+                LauncherReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestLauncherReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
+            }
+
+            if (UpdateServiceReleaseReponse == null)
+            {
+                UpdateServiceReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestUpdateServiceReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
+            }
         }
 
         [HttpGet("client-version")]
         public async Task<IActionResult> GetVersion()
         {
-            var latestRelease = await GetLatestUpdateServiceReleaseFromGithub();
+            var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -34,7 +52,7 @@ namespace w3c_update_service
         [HttpGet("maps")]
         public async Task<IActionResult> GetMaps()
         {
-            var latestRelease = await GetLatestUpdateServiceReleaseFromGithub();
+            var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -49,7 +67,7 @@ namespace w3c_update_service
         [HttpGet("webui")]
         public async Task<IActionResult> GetWebUi(bool ptr)
         {
-            var latestRelease = await GetLatestUpdateServiceReleaseFromGithub();
+            var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -65,7 +83,7 @@ namespace w3c_update_service
         [HttpGet("launcher/{type}")]
         public async Task<IActionResult> GetInstaller(SupportedOs type)
         {
-            var latestRelease = await GetLatestLauncherReleaseFromGithub();
+            var latestRelease = await LauncherReleaseReponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -96,7 +114,7 @@ namespace w3c_update_service
         [HttpGet("launcher-version")]
         public async Task<IActionResult> GetInstallerVersion()
         {
-            var latestRelease = await GetLatestLauncherReleaseFromGithub();
+            var latestRelease = await LauncherReleaseReponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -117,7 +135,7 @@ namespace w3c_update_service
         {
             var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.StartsWith(startsWithFileName));
 
-            return $"https://cors-anywhere.herokuapp.com/{releaseAsset?.BrowserDownloadUrl}";
+            return releaseAsset?.BrowserDownloadUrl;
         }
 
         private async Task<GithubReleaseResponse> GetLatestLauncherReleaseFromGithub()
