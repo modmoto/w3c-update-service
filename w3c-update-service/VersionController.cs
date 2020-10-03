@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using w3c_update_service.Models;
 
 namespace w3c_update_service
 {
@@ -15,19 +17,16 @@ namespace w3c_update_service
         [HttpGet("client-version")]
         public IActionResult GetVersion()
         {
-            var version = Directory.GetFiles(_updateFileFolder)
-                .Where(f => f.StartsWith(_updateFileFolder + "maps"))
-                .OrderByDescending(f => f)
-                .First()
-                .Split("_v")[1]
-                .Replace(".zip", "");
-            return Ok(new { version });
+            var latestMapData = GetLatestMapsData();
+            return Ok(new { version = latestMapData.Version.ToString() });
         }
 
         [HttpGet("maps")]
         public IActionResult GetMaps()
         {
-            return LoadFile(_updateFileFolder, "maps");
+            var latestMapData = GetLatestMapsData();
+
+            return LoadFileDirectly(latestMapData.FilePath, "maps");
         }
 
         [HttpGet("webui")]
@@ -83,6 +82,34 @@ namespace w3c_update_service
             var fileContentResult = new FileContentResult(dataBytes, "application/zip");
             fileContentResult.FileDownloadName = $"{fileNameStart}.zip";
             return fileContentResult;
+        }
+
+        private static IActionResult LoadFileDirectly(string filePath, string downloadFileName)
+        {
+            var dataBytes = System.IO.File.ReadAllBytes(filePath);
+            var fileContentResult = new FileContentResult(dataBytes, "application/zip");
+            fileContentResult.FileDownloadName = $"{downloadFileName}.zip";
+            return fileContentResult;
+        }
+
+        private MapsData GetLatestMapsData()
+        {
+            var mapFiles = Directory.GetFiles(_updateFileFolder)
+             .Where(f => f.StartsWith(_updateFileFolder + "maps"));
+
+            List<MapsData> mapsData = new List<MapsData>();
+            foreach (var mapFile in mapFiles)
+            {
+                int version = 0;
+
+                if(int.TryParse(mapFile.Split("_v")[1].Replace(".zip", ""), out version))
+                {
+                    var mapData = new MapsData() { FilePath = mapFile, Version = version };
+                    mapsData.Add(mapData);
+                }
+            }
+
+            return mapsData.OrderByDescending(x => x.Version).First();
         }
     }
 
