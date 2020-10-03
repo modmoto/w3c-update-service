@@ -94,7 +94,7 @@ namespace w3c_update_service
         {
             var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.EndsWith(fileExtension));
 
-            return releaseAsset?.BrownserDownloadUrl;
+            return releaseAsset?.BrowserDownloadUrl;
         }
 
         private static IActionResult LoadFile(string basePath, string fileNameStart)
