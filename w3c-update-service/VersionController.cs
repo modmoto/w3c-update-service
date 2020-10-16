@@ -39,14 +39,14 @@ namespace w3c_update_service
         [HttpGet("client-version")]
         public async Task<IActionResult> GetVersion()
         {
-            var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
+            //var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
 
-            if (latestRelease == null)
-            {
-                return BadRequest("There was a problem getting data from github");
-            }
+            //if (latestRelease == null)
+            //{
+            //    return BadRequest("There was a problem getting data from github");
+            //}
 
-            return Ok(new { version = latestRelease.Name });
+            return Ok(new { version = "12" });
         }
 
         [HttpGet("maps")]
