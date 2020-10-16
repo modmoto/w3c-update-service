@@ -67,16 +67,16 @@ namespace w3c_update_service
         [HttpGet("webui")]
         public async Task<IActionResult> GetWebUi(bool ptr)
         {
-            var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
+            //var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
 
-            if (latestRelease == null)
-            {
-                return BadRequest("There was a problem getting data from github");
-            }
+            //if (latestRelease == null)
+            //{
+            //    return BadRequest("There was a problem getting data from github");
+            //}
 
-            var url = GetLinkToReleaseAssetByFileName(latestRelease, ptr ? "ptr-webui" : "webui");
+            //var url = GetLinkToReleaseAssetByFileName(latestRelease, ptr ? "ptr-webui" : "webui");
 
-            return Redirect(url);
+            return Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/webui.zip");
         }
 
 
