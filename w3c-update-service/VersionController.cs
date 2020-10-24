@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using w3c_update_service.Cache;
+using w3c_update_service.Models;
 using w3c_update_service.Models.GithubModels;
 
 namespace w3c_update_service
@@ -17,22 +18,28 @@ namespace w3c_update_service
 
         private readonly IHttpClientFactory _clientFactory;
 
-        private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseReponse;
-        private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseReponse;
+        private static CachedData<Task<GithubRelease>> LauncherLatestRelease;
+        private static CachedData<Task<GithubRelease[]>> LauncherReleases;
+        private static CachedData<Task<GithubRelease>> UpdateServiceReleaseReponse;
 
 
         public VersionController(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
 
-            if (LauncherReleaseReponse == null)
+            if (LauncherLatestRelease == null)
             {
-                LauncherReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestLauncherReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
+                LauncherLatestRelease = new CachedData<Task<GithubRelease>>(GetLatestLauncherReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
+            }
+
+            if (LauncherReleases == null)
+            {
+                LauncherReleases = new CachedData<Task<GithubRelease[]>>(GetLauncherReleasesFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
             }
 
             if (UpdateServiceReleaseReponse == null)
             {
-                UpdateServiceReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestUpdateServiceReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
+                UpdateServiceReleaseReponse = new CachedData<Task<GithubRelease>>(GetLatestUpdateServiceReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
             }
         }
 
@@ -83,7 +90,7 @@ namespace w3c_update_service
         [HttpGet("launcher/{type}")]
         public async Task<IActionResult> GetInstaller(SupportedOs type)
         {
-            var latestRelease = await LauncherReleaseReponse.GetCachedData();
+            var latestRelease = await LauncherLatestRelease.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -114,7 +121,7 @@ namespace w3c_update_service
         [HttpGet("launcher-version")]
         public async Task<IActionResult> GetInstallerVersion()
         {
-            var latestRelease = await LauncherReleaseReponse.GetCachedData();
+            var latestRelease = await LauncherLatestRelease.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -124,31 +131,58 @@ namespace w3c_update_service
             return Ok(new { version = latestRelease.Name });
         }
 
-        private static string GetLinkToReleaseAssetByFileExtension(GithubReleaseResponse response, string fileExtension)
+        [HttpGet("launcher-release-notes")]
+        public async Task<IActionResult> GetLauncherReleaseNotes(bool ptr)
+        {
+            var releases = await LauncherReleases.GetCachedData();
+
+            if (releases == null)
+            {
+                return BadRequest("There was a problem getting data from github");
+            }
+
+            if (!ptr)
+            {
+                releases = releases.Where(x => x.IsProdRelease).ToArray();
+            }
+
+            var releaseNotes = releases
+                .Select(x => new ReleaseNotes() { Version = x.Name, Notes = x.Body })
+                .ToArray();
+
+            return Ok(releaseNotes);
+        }
+
+        private static string GetLinkToReleaseAssetByFileExtension(GithubRelease response, string fileExtension)
         {
             var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.EndsWith(fileExtension));
 
             return releaseAsset?.BrowserDownloadUrl;
         }
 
-        private static string GetLinkToReleaseAssetByFileName(GithubReleaseResponse response, string startsWithFileName)
+        private static string GetLinkToReleaseAssetByFileName(GithubRelease response, string startsWithFileName)
         {
             var releaseAsset = response.Assets.FirstOrDefault(x => x.Name.StartsWith(startsWithFileName));
 
             return releaseAsset?.BrowserDownloadUrl;
         }
 
-        private async Task<GithubReleaseResponse> GetLatestLauncherReleaseFromGithub()
+        private async Task<GithubRelease> GetLatestLauncherReleaseFromGithub()
         {
             return await GetLatestReleaseFromRepo("w3champions/w3champions-launcher");
         }
 
-        private async Task<GithubReleaseResponse> GetLatestUpdateServiceReleaseFromGithub()
+        private async Task<GithubRelease[]> GetLauncherReleasesFromGithub()
+        {
+            return await GetReleasesFromRepo("w3champions/w3champions-launcher");
+        }
+
+        private async Task<GithubRelease> GetLatestUpdateServiceReleaseFromGithub()
         {
             return await GetLatestReleaseFromRepo("w3champions/w3champions-update-service");
         }
 
-        private async Task<GithubReleaseResponse> GetLatestReleaseFromRepo(string repoName)
+        private async Task<GithubRelease> GetLatestReleaseFromRepo(string repoName)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{repoName}/releases/latest");
             request.Headers.Add("Accept", "application/vnd.github.v3+json");
@@ -160,7 +194,26 @@ namespace w3c_update_service
             if (response.IsSuccessStatusCode)
             {
                 var reponseString = await response.Content.ReadAsStringAsync();
-                var releaseResposne = JsonConvert.DeserializeObject<GithubReleaseResponse>(reponseString);
+                var releaseResposne = JsonConvert.DeserializeObject<GithubRelease>(reponseString);
+                return releaseResposne;
+            }
+
+            return null;
+        }
+
+        private async Task<GithubRelease[]> GetReleasesFromRepo(string repoName)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{repoName}/releases");
+            request.Headers.Add("Accept", "application/vnd.github.v3+json");
+            request.Headers.Add("User-Agent", "Asp.WebApi");
+
+            var client = _clientFactory.CreateClient();
+            var response = await client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var reponseString = await response.Content.ReadAsStringAsync();
+                var releaseResposne = JsonConvert.DeserializeObject<GithubRelease[]>(reponseString);
                 return releaseResposne;
             }
 
