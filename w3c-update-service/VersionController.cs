@@ -76,6 +76,11 @@ namespace w3c_update_service
 
             //var url = GetLinkToReleaseAssetByFileName(latestRelease, ptr ? "ptr-webui" : "webui");
 
+            if (ptr)
+            {
+                Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/ptr-webui.zip");
+            }
+
             return Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/webui.zip");
         }
 
