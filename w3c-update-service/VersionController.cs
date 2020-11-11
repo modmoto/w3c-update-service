@@ -14,6 +14,7 @@ namespace w3c_update_service
     public class VersionController : ControllerBase
     {
         private const int GithubReleaseCacheMunutes = 5;
+        private const int currentVersion = 12;
 
         private readonly IHttpClientFactory _clientFactory;
 
@@ -46,7 +47,7 @@ namespace w3c_update_service
             //    return BadRequest("There was a problem getting data from github");
             //}
 
-            return Ok(new { version = "12" });
+            return Ok(new { version = currentVersion });
         }
 
         [HttpGet("maps")]
@@ -61,7 +62,7 @@ namespace w3c_update_service
 
             //var url = GetLinkToReleaseAssetByFileName(latestRelease, "maps");
 
-            return Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/maps_v12.zip");
+            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/maps_v{currentVersion}.zip");
         }
 
         [HttpGet("webui")]
@@ -78,10 +79,10 @@ namespace w3c_update_service
 
             if (ptr)
             {
-              return Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/ptr-webui.zip");
+              return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/ptr-webui.zip");
             }
 
-            return Redirect("https://github.com/w3champions/w3champions-update-service/releases/download/v12/webui.zip");
+            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/webui.zip");
         }
 
 
