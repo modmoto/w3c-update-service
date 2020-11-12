@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,10 +16,12 @@ namespace w3c_update_service
     {
         private const int GithubReleaseCacheMunutes = 5;
         private const int CurrentVersion = 12;
+        private static readonly string _launcherFolder = "Launchers";
 
         private readonly IHttpClientFactory _clientFactory;
 
         private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseResponse;
+
         private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseResponse;
 
 
@@ -83,8 +86,19 @@ namespace w3c_update_service
 
 
         [HttpGet("launcher/{type}")]
-        public async Task<IActionResult> GetInstaller(SupportedOs type)
+        public async Task<IActionResult> GetInstaller(SupportedOs type, bool localFile)
         {
+            // local file is used so we can distribute beta launchers on the test site
+            if (localFile)
+            {
+                switch (type)
+                {
+                    case SupportedOs.mac : return DownloadLauncherFor("dmg");
+                    case SupportedOs.win : return DownloadLauncherFor("exe");
+                    default: return BadRequest("Unsupported OS Version");
+                }
+            }
+
             var latestRelease = await LauncherReleaseResponse.GetCachedData();
 
             if (latestRelease == null)
@@ -124,6 +138,18 @@ namespace w3c_update_service
             }
 
             return Ok(new { version = latestRelease.Name });
+        }
+
+        private static IActionResult DownloadLauncherFor(string fileEnding)
+        {
+            var strings = Directory.GetFiles(_launcherFolder).Where(f => f.EndsWith(fileEnding)).ToList();
+            var ordered = strings.OrderByDescending(s => s);
+            var filePath = ordered.First();
+            var dataBytes = System.IO.File.ReadAllBytes(filePath);
+            return new FileContentResult(dataBytes, $"application/{fileEnding}")
+            {
+                FileDownloadName = filePath.Split("/").Last()
+            };
         }
 
         private static string GetLinkToReleaseAssetByFileExtension(GithubReleaseResponse response, string fileExtension)
