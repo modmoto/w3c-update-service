@@ -14,46 +14,42 @@ namespace w3c_update_service
     public class VersionController : ControllerBase
     {
         private const int GithubReleaseCacheMunutes = 5;
-        private const int currentVersion = 12;
+        private const int CurrentVersion = 12;
 
         private readonly IHttpClientFactory _clientFactory;
 
-        private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseReponse;
-        private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseReponse;
+        private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseResponse;
+        private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseResponse;
 
 
         public VersionController(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
 
-            if (LauncherReleaseReponse == null)
-            {
-                LauncherReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestLauncherReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
-            }
+            LauncherReleaseResponse ??= new CachedData<Task<GithubReleaseResponse>>(GetLatestLauncherReleaseFromGithub,
+                TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
 
-            if (UpdateServiceReleaseReponse == null)
-            {
-                UpdateServiceReleaseReponse = new CachedData<Task<GithubReleaseResponse>>(GetLatestUpdateServiceReleaseFromGithub, TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
-            }
+            UpdateServiceReleaseResponse ??= new CachedData<Task<GithubReleaseResponse>>(GetLatestUpdateServiceReleaseFromGithub,
+                TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
         }
 
         [HttpGet("client-version")]
         public async Task<IActionResult> GetVersion()
         {
-            //var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
+            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
 
             //if (latestRelease == null)
             //{
             //    return BadRequest("There was a problem getting data from github");
             //}
 
-            return Ok(new { version = currentVersion });
+            return Ok(new { version = CurrentVersion });
         }
 
         [HttpGet("maps")]
         public async Task<IActionResult> GetMaps()
         {
-            //var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
+            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
 
             //if (latestRelease == null)
             //{
@@ -62,13 +58,13 @@ namespace w3c_update_service
 
             //var url = GetLinkToReleaseAssetByFileName(latestRelease, "maps");
 
-            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/maps_v{currentVersion}.zip");
+            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/maps_v{CurrentVersion}.zip");
         }
 
         [HttpGet("webui")]
         public async Task<IActionResult> GetWebUi(bool ptr)
         {
-            //var latestRelease = await UpdateServiceReleaseReponse.GetCachedData();
+            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
 
             //if (latestRelease == null)
             //{
@@ -79,17 +75,17 @@ namespace w3c_update_service
 
             if (ptr)
             {
-              return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/ptr-webui.zip");
+              return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/ptr-webui.zip");
             }
 
-            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{currentVersion}/webui.zip");
+            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/webui.zip");
         }
 
 
         [HttpGet("launcher/{type}")]
         public async Task<IActionResult> GetInstaller(SupportedOs type)
         {
-            var latestRelease = await LauncherReleaseReponse.GetCachedData();
+            var latestRelease = await LauncherReleaseResponse.GetCachedData();
 
             if (latestRelease == null)
             {
@@ -120,7 +116,7 @@ namespace w3c_update_service
         [HttpGet("launcher-version")]
         public async Task<IActionResult> GetInstallerVersion()
         {
-            var latestRelease = await LauncherReleaseReponse.GetCachedData();
+            var latestRelease = await LauncherReleaseResponse.GetCachedData();
 
             if (latestRelease == null)
             {
