@@ -22,66 +22,36 @@ namespace w3c_update_service
 
         private static CachedData<Task<GithubReleaseResponse>> LauncherReleaseResponse;
 
-        private static CachedData<Task<GithubReleaseResponse>> UpdateServiceReleaseResponse;
-
-
         public VersionController(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
 
             LauncherReleaseResponse ??= new CachedData<Task<GithubReleaseResponse>>(GetLatestLauncherReleaseFromGithub,
                 TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
-
-            UpdateServiceReleaseResponse ??= new CachedData<Task<GithubReleaseResponse>>(GetLatestUpdateServiceReleaseFromGithub,
-                TimeSpan.FromMinutes(GithubReleaseCacheMunutes));
         }
 
         [HttpGet("client-version")]
-        public async Task<IActionResult> GetVersion()
+        public IActionResult GetVersion()
         {
-            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
-
-            //if (latestRelease == null)
-            //{
-            //    return BadRequest("There was a problem getting data from github");
-            //}
-
             return Ok(new { version = CurrentVersion });
         }
 
         [HttpGet("maps")]
-        public async Task<IActionResult> GetMaps()
+        public FileStreamResult GetMaps()
         {
-            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
-
-            //if (latestRelease == null)
-            //{
-            //    return BadRequest("There was a problem getting data from github");
-            //}
-
-            //var url = GetLinkToReleaseAssetByFileName(latestRelease, "maps");
-
-            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/maps_v{CurrentVersion}.zip");
+            var mapsFileName = $"maps_v{CurrentVersion}.zip";
+            return GetContentFile(mapsFileName);
         }
 
         [HttpGet("webui")]
-        public async Task<IActionResult> GetWebUi(bool ptr)
+        public FileStreamResult GetWebUi(bool ptr)
         {
-            //var latestRelease = await UpdateServiceReleaseResponse.GetCachedData();
-
-            //if (latestRelease == null)
-            //{
-            //    return BadRequest("There was a problem getting data from github");
-            //}
-
-            //var url = GetLinkToReleaseAssetByFileName(latestRelease, ptr ? "ptr-webui" : "webui");
-
             if (ptr)
             {
-              return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/ptr-webui.zip");
+                return GetContentFile("ptr-webui.zip");
             }
 
-            return Redirect($"https://github.com/w3champions/w3champions-update-service/releases/download/v{CurrentVersion}/webui.zip");
+            return GetContentFile("webui.zip");
         }
 
 
@@ -138,6 +108,15 @@ namespace w3c_update_service
             }
 
             return Ok(new { version = latestRelease.Name });
+        }
+
+        private static FileStreamResult GetContentFile(string fileName)
+        {
+            var stream = System.IO.File.OpenRead($"Content/{fileName}");
+            return new FileStreamResult(stream, "application/octet-stream")
+            {
+                FileDownloadName = fileName
+            };
         }
 
         private static IActionResult DownloadLauncherFor(string fileEnding)
