@@ -38,4 +38,3 @@ steps:
     buildContext: '.'
     tags: |
       $(BuildVersioning)
-      $(IsLatest)
