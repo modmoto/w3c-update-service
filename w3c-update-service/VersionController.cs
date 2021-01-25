@@ -15,7 +15,11 @@ namespace w3c_update_service
     public class VersionController : ControllerBase
     {
         private const int GithubReleaseCacheMunutes = 5;
+<<<<<<< Updated upstream
         private const int CurrentVersion = 14;
+=======
+        private const int CurrentVersion = 16;
+>>>>>>> Stashed changes
         private static readonly string _launcherFolder = "Launchers";
 
         private readonly IHttpClientFactory _clientFactory;
