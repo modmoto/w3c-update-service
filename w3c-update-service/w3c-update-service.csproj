@@ -6,13 +6,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="Content\maps_v16.zip" />
+      <None Remove="Content\maps_v17.zip" />
       <None Remove="Content\ptr-webui.zip" />
       <None Remove="Content\webui.zip" />
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Content\maps_v16.zip">
+      <Content Include="Content\maps_v17.zip">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
       <Content Include="Content\ptr-webui.zip">
