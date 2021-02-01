@@ -44,6 +44,13 @@ namespace w3c_update_service
             return GetContentFile(mapsFileName);
         }
 
+        [HttpGet("maps/download")]
+        public FileStreamResult DownloadMap(string mapPath)
+        {
+            var mapFullPath = $"maps/{mapPath}";
+            return GetContentFile(mapFullPath);
+        }
+
         [HttpGet("webui")]
         public FileStreamResult GetWebUi(bool ptr)
         {
