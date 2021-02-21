@@ -15,7 +15,7 @@ namespace w3c_update_service
     public class VersionController : ControllerBase
     {
         private const int GithubReleaseCacheMunutes = 5;
-        private const int CurrentVersion = 19;
+        private const int CurrentVersion = 20;
 
         private static readonly string _launcherFolder = "Launchers";
 
